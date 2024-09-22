@@ -32,6 +32,31 @@ def collect_objects(sequence:list[typing.Sequence[cv2.typing.Rect]]) -> list[tup
         data.append((x,y,w,h))
 
     return data
+
+class Coordinates:
+    x:int
+    y:int
+    width:int
+    height:int
+
+class EyeObject:
+
+    left:Coordinates
+    right:Coordinates
+
+    def __init__(self,eyes:tuple[typing.Sequence[cv2.typing.Rect],typing.Sequence[cv2.typing.Rect]]):
+        self.left = Coordinates()
+        self.right = Coordinates()
+        
+        self.left.x = eyes[0][0]
+        self.left.y = eyes[0][1]
+        self.left.width = eyes[0][2]
+        self.left.height = eyes[0][3]
+        self.right.x = eyes[1][0]
+        self.right.y = eyes[1][1]
+        self.right.width = eyes[1][2]
+        self.right.height = eyes[1][3]
+
 def main():    
     capture_device = cv2.VideoCapture(0)
     
@@ -56,15 +81,33 @@ def main():
                 # crop
                 cropped = gray_frame[y:y+h,x:x+w]
                 eyes, numDetects = eye_model.detectMultiScale2(cropped,minNeighbors=10)
-                if len(numDetects) == 2:
-                    print("detected two eyes")
-                    eyes[0][0] += x
-                    eyes[1][0] += x
-                    eyes[0][1] += y
-                    eyes[1][1] += y
-                    
-                    for (e_x,e_y,e_w,e_h) in eyes:        
-                        cv2.rectangle(frame,(e_x,e_y),(e_x+e_w,e_y+e_h),(255,0,0),4)
+                if len(numDetects) != 2:
+                    continue
+                # fix eye coordinates
+                eyes[0][0] += x
+                eyes[1][0] += x
+                eyes[0][1] += y
+                eyes[1][1] += y
+                eye_obj = EyeObject(eyes)
+                left_eye = eye_obj.left
+                right_eye = eye_obj.right
+                cv2.rectangle(frame,(left_eye.x,left_eye.y),(left_eye.x+left_eye.width,left_eye.y+left_eye.height),(255,0,0),4)
+                cv2.rectangle(frame,(right_eye.x,right_eye.y),(right_eye.x+right_eye.width,right_eye.y+right_eye.height),(255,0,0),4)  
+
+                left_eye_center_x = left_eye.x + left_eye.width // 2
+                left_eye_center_y = left_eye.y + left_eye.height // 2
+
+                right_eye_center_x = right_eye.x + right_eye.width // 2
+                right_eye_center_y = right_eye.y + right_eye.height // 2
+
+                center_x = (left_eye_center_x + right_eye_center_x) // 2
+                center_y = (left_eye_center_y + right_eye_center_y) // 2
+
+                middle_rect_x = center_x - 100 // 2
+                middle_rect_y = center_y - left_eye_center_y // 2
+
+                cv2.rectangle(frame,(middle_rect_x,middle_rect_y),(middle_rect_x + 100,middle_rect_y + 50),(0,255,0),4)
+
                 cv2.rectangle(frame,(x,y),(x+w,y+h),(0,255,0),4)
             
             cv2.imshow("Face Detector system",frame)
