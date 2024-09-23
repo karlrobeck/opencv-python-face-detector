@@ -106,6 +106,11 @@ def main():
                 middle_rect_x = center_x - 100 // 2
                 middle_rect_y = center_y - left_eye_center_y // 2
 
+                roi_frame = frame[middle_rect_y:middle_rect_y+50,middle_rect_x:middle_rect_x+100]
+                cv2.imshow("Region of interest",roi_frame)
+                roi_filtered = cv2.cvtColor(roi_frame,cv2.COLOR_BGR2HSV)
+                cv2.imshow("HSV Colored",roi_filtered)
+                print(roi_filtered.mean())
                 cv2.rectangle(frame,(middle_rect_x,middle_rect_y),(middle_rect_x + 100,middle_rect_y + 50),(0,255,0),4)
 
                 cv2.rectangle(frame,(x,y),(x+w,y+h),(0,255,0),4)
